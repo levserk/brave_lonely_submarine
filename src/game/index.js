@@ -1,20 +1,29 @@
-const PIXI = require('pixi.js');
+import * as PIXI from 'pixi.js'
+import textures from './textures'
 
-let boxes = [];
+let boxes = [],
+    spites = [],
+    hSpeed = 1,
+    vAcl = 0.02,
+    vMaxSpeed = 3,
+    submarine;
 
 export const run = () => {
     let app = createApp();
     document.body.appendChild(app.view);
     console.log(`game is run`);
-    startGame(app);
+    PIXI.loader.add('submarine', textures.submarine)
+        .load(() => {
+        startGame(app)
+    });
     return app;
 };
 
 const createApp = () => {
     let width = document.documentElement.clientWidth,
         height = document.documentElement.clientHeight;
-        return new PIXI.Application(width, height, {
-        backgroundColor: 0x014f63,
+    return new PIXI.Application(width, height, {
+        backgroundColor: 0x334d5c,
         //antialiasing: true,
         //antialias: true,
         //forceFXAA: true,
@@ -23,7 +32,7 @@ const createApp = () => {
     });
 };
 
-const BOX_COLOR = 0x272d37;
+const BOX_COLOR = 0xd5d5d5;
 
 const Box = (width, height, color) => {
     let graphics = new PIXI.Graphics();
@@ -34,30 +43,100 @@ const Box = (width, height, color) => {
     return graphics;
 };
 
-const createBox = (app) => {
-    let box = Box(25, 25, BOX_COLOR),
-        width = app.screen.width,
-        height = app.screen.height;
-
-    box.x = width - box.height;
-    box.y = Math.random() * (height - box.height);
+const createBox = (container, x, y) => {
+    let box = Box(25, 25, BOX_COLOR);
+    box.x = x;
+    box.y = y;
     boxes.push(box);
-    app.stage.addChild(box);
+    container.addChild(box);
+};
+
+const createSubmarine = (app) => {
+    if (submarine) return submarine;
+    submarine = new PIXI.Container();
+    submarine.sprite = new PIXI.Sprite(PIXI.loader.resources.submarine.texture);
+    submarine.addChild(submarine.sprite);
+    submarine.sprite.height = submarine.sprite.height * 0.8;
+    submarine.sprite.width = submarine.sprite.width * 0.8;
+    submarine.sprite.anchor.set(0.5);
+    submarine.vSpeed = 0;
+    submarine.direction = 0;
+    submarine.cacheAsBitmap = true;
+    app.stage.addChild(submarine);
+    submarine.x = app.screen.width / 2;
+    submarine.y = app.screen.height / 2;
+};
+
+const removeObj = (app, obj) => {
+    obj.removeed = true;
+    app.stage.removeChild(obj);
+};
+
+const OUTBORDER_MAX_DISTANCE = 100;
+const checkObjectIsOutBorders = (obj, app) => {
+    let appWidth = app.screen.width,
+        appHeight = app.screen.height,
+        objWidth = obj.width,
+        objHeight = obj.height;
+
+    return (obj.x - objWidth < -OUTBORDER_MAX_DISTANCE || obj.y - objHeight < -OUTBORDER_MAX_DISTANCE ||
+        obj.x > appWidth + OUTBORDER_MAX_DISTANCE || obj.y > appHeight + OUTBORDER_MAX_DISTANCE)
 };
 
 
 const startGame = (app) => {
-    createBox(app);
+    createSubmarine(app);
     app.ticker.add((delta) => render(delta, app));
+    window.onkeydown = (e) => onKeyDown(e.keyCode);
+    window.onkeyup = (e) => onKeyUp(e.keyCode);
+};
+
+const UP_KEYCODE = 38;
+const DOWN_KEYCODE = 40;
+const onKeyDown = (keyCode) => {
+    if (UP_KEYCODE === keyCode) {
+        submarine.direction = -1;
+    }
+    if (DOWN_KEYCODE === keyCode) {
+        submarine.direction = 1
+    }
+};
+
+const onKeyUp = (keyCode) => {
+    if (UP_KEYCODE === keyCode || DOWN_KEYCODE === keyCode) {
+        submarine.direction = 0;
+    }
 };
 
 const render = (delta, app) => {
+    updateBoxes(delta, app);
+    updateSubmarine(delta, app);
+    if (Math.random() > 0.96) {
+        createBox(app.stage, app.screen.width - 25, Math.random() * (app.screen.height - 25));
+    }
+};
+
+const updateSubmarine = (delta, app) => {
+    //console.log(submarine.vSpeed, submarine.direction);
+    submarine.vSpeed = submarine.vSpeed + vAcl  + (vAcl * 2 * submarine.direction);
+    submarine.y += submarine.vSpeed;
+    submarine.rotation = Math.atan2(submarine.vSpeed, hSpeed);
+    if (submarine.y > app.screen.height - submarine.sprite.height || submarine.y < submarine.sprite.height) {
+        submarine.y = app.screen.height / 2;
+        submarine.vSpeed = 0;
+    }
+};
+
+const updateBoxes = (delta, app) => {
+    let removed = false;
     boxes.forEach((box) => {
-        box.x += -1 - delta;
+        box.x += -hSpeed - delta;
+        if (checkObjectIsOutBorders(box, app)) {
+            removed = true;
+            removeObj(app, box);
+        }
     });
 
-    if (Math.random() > 0.96) {
-        createBox(app)
-    }
+    boxes = removed ? boxes.filter(box => !box.removeed) : boxes;
 };
 
