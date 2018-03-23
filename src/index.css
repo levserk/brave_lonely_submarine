@@ -1,0 +1,11 @@
+div {
+    width: 50%;
+    height: 20%;
+    font-size: 5em;
+    border: 1px solid black;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    margin: 0 auto;
+    margin-top: 10%;
+}
