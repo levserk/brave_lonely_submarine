@@ -62,7 +62,7 @@
 /******/ 	}
 /******/
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "07915a5793fc997c6a04"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "81234668df64b1d33a6d"; // eslint-disable-line no-unused-vars
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
@@ -43531,6 +43531,7 @@ let boxes = [],
     vMaxSpeed = 3,
     info,
     submarine,
+    touchStartFlag = false,
     accelerometerEvent,
     magnetometerEvent;
 
@@ -43654,12 +43655,6 @@ const startGame = (app) => {
         console.log("DeviceMotionEvent is not supported");
     }
 
-    if(window.DeviceOrientationEvent){
-        window.addEventListener("deviceorientation", orientation, false);
-    }else{
-        console.log("DeviceOrientationEvent is not supported");
-    }
-
 };
 
 const UP_KEYCODE = 38;
@@ -43681,6 +43676,7 @@ const onKeyUp = (keyCode) => {
 
 const touchStart = (touch) => {
     console.log('touchStart', touch.pageX > app.screen.width / 2);
+    touchStartFlag = true;
     if (touch.pageX > app.screen.width / 2 ) {
         submarine.direction = -1;
     } else {
@@ -43689,19 +43685,68 @@ const touchStart = (touch) => {
 };
 
 const touchEnd = (touch) => {
+    touchStartFlag = false;
     submarine.direction = 0;
 };
 
+const ORIENTATION_LANDSCAPE_PRIMARY = `landscape-primary`;
+const ORIENTATION_LANDSCAPE_SECONDARY = `landscape-secondary`;
+const ORIENTATION_PORTRAIT_PRIMARY = `portrait-primary`;
+const ORIENTATION_PORTRAIT_SECONDARY = `portrait-secondary`;
+
 const motion = (event) => {
     console.log("Accelerometer: ", event);
-    accelerometerEvent = event
-};
+    accelerometerEvent = event;
 
-const orientation = (event) =>{
-    console.log("Magnetometer: ", event);
-    magnetometerEvent = event;
-};
+    if (touchStartFlag) {
+        return;
+    }
 
+    switch (window.screen.orientation) {
+        case ORIENTATION_LANDSCAPE_PRIMARY:
+            if (event.accelerationIncludingGravity.y < -1) {
+                submarine.direction = -1;
+                return;
+            }
+            if (event.accelerationIncludingGravity.y > 1) {
+                submarine.direction = 1;
+                return;
+            }
+            break;
+        case ORIENTATION_LANDSCAPE_SECONDARY:
+            if (event.accelerationIncludingGravity.y < -1) {
+                submarine.direction = 1;
+                return;
+            }
+            if (event.accelerationIncludingGravity.y > 1) {
+                submarine.direction = -1;
+                return;
+            }
+            break;
+        case ORIENTATION_PORTRAIT_PRIMARY:
+            if (event.accelerationIncludingGravity.x < -1) {
+                submarine.direction = -1;
+                return;
+            }
+            if (event.accelerationIncludingGravity.x > 1) {
+                submarine.direction = 1;
+                return;
+            }
+            break;
+        case ORIENTATION_PORTRAIT_SECONDARY:
+            if (event.accelerationIncludingGravity.x < -1) {
+                submarine.direction = 1;
+                return;
+            }
+            if (event.accelerationIncludingGravity.x > 1) {
+                submarine.direction = -1;
+                return;
+            }
+            break;
+    }
+
+    submarine.direction = 0;
+};
 
 const render = (delta, app) => {
     updateBoxes(delta, app);
@@ -43751,12 +43796,10 @@ const createInfo = (app) => {
 const showInfo = (app) => {
     info.text = `width: ${app.screen.width}, height: ${app.screen.height}, boxCount: ${boxes.length}` +
         (accelerometerEvent ? `\n accelerometerEvent: x: ${accelerometerEvent.accelerationIncludingGravity.x}` +
-            `y: ${accelerometerEvent.accelerationIncludingGravity.y}` +
-            `z: ${accelerometerEvent.accelerationIncludingGravity.z}` : ``) +
-        (magnetometerEvent ? `\n magnetometerEvent: x: ${magnetometerEvent.alpha}` +
-            `y: ${magnetometerEvent.beta}` +
-            `z: ${magnetometerEvent.gamma}`: ``) +
-        (window.screen.orientation ? `\n orientation: ${window.screen.orientation.type}` : ``)
+            `y: ${accelerometerEvent.accelerationIncludingGravity.y}` : ``) +
+        (accelerometerEvent ? `\n accelerometerEvent acel: x: ${accelerometerEvent.acceleration.x}` +
+            `y: ${accelerometerEvent.acceleration.y}` : ``) +
+        (window.screen.orientation ? `\n orientation: ${window.screen.orientation.type}` : ``);
 };
 
 
