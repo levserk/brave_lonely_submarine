@@ -62,7 +62,7 @@
 /******/ 	}
 /******/
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "8fb9f07c51d57b6d19c2"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "0a12492e557c7a5347c4"; // eslint-disable-line no-unused-vars
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
@@ -43527,15 +43527,36 @@ __webpack_require__.r(__webpack_exports__);
 let boxes = [],
     spites = [],
     hSpeed = 1,
+    vAcl = 0.02,
+    vMaxSpeed = 3,
     submarine;
 
 const run = () => {
     let app = createApp();
     document.body.appendChild(app.view);
     console.log(`game is run`);
-    pixi_js__WEBPACK_IMPORTED_MODULE_0__["loader"].add('submarine', _textures__WEBPACK_IMPORTED_MODULE_1__["default"].submarine)
-        .load(() => { startGame(app) });
+    if (pixi_js__WEBPACK_IMPORTED_MODULE_0__["loader"].resources.submarine) {
+        startGame(app)
+    } else {
+        pixi_js__WEBPACK_IMPORTED_MODULE_0__["loader"].add('submarine', _textures__WEBPACK_IMPORTED_MODULE_1__["default"].submarine)
+            .load(() => {
+                startGame(app)
+            });
+    }
+
+    //monkey path app destroy
+    let appdestroy = app.destroy;
+    app.destroy = function () {
+        destroy();
+        appdestroy.bind(app)();
+    }.bind(app);
+
     return app;
+};
+
+const destroy = () => {
+    submarine = null;
+    boxes = [];
 };
 
 const createApp = () => {
@@ -43574,14 +43595,16 @@ const createSubmarine = (app) => {
     if (submarine) return submarine;
     submarine = new pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"]();
     submarine.sprite = new pixi_js__WEBPACK_IMPORTED_MODULE_0__["Sprite"](pixi_js__WEBPACK_IMPORTED_MODULE_0__["loader"].resources.submarine.texture);
-    submarine.sprite.height = 80;
-    submarine.sprite.width = 40;
-    //submarine.sprite.anchor.set(0.5);
+    submarine.addChild(submarine.sprite);
+    submarine.sprite.height = submarine.sprite.height * 0.8;
+    submarine.sprite.width = submarine.sprite.width * 0.8;
+    submarine.sprite.anchor.set(0.5);
+    submarine.vSpeed = 0;
+    submarine.direction = 0;
     submarine.cacheAsBitmap = true;
     app.stage.addChild(submarine);
-    submarine.x = 100;
-    submarine.y = 100;
-    createBox(submarine, 0, 0)
+    submarine.x = app.screen.width / 2;
+    submarine.y = app.screen.height / 2;
 };
 
 const removeObj = (app, obj) => {
@@ -43602,12 +43625,49 @@ const checkObjectIsOutBorders = (obj, app) => {
 
 
 const startGame = (app) => {
-    console.log(pixi_js__WEBPACK_IMPORTED_MODULE_0__["loader"].resources)
     createSubmarine(app);
     app.ticker.add((delta) => render(delta, app));
+    window.onkeydown = (e) => onKeyDown(e.keyCode);
+    window.onkeyup = (e) => onKeyUp(e.keyCode);
+};
+
+const UP_KEYCODE = 38;
+const DOWN_KEYCODE = 40;
+const onKeyDown = (keyCode) => {
+    if (UP_KEYCODE === keyCode) {
+        submarine.direction = -1;
+    }
+    if (DOWN_KEYCODE === keyCode) {
+        submarine.direction = 1
+    }
+};
+
+const onKeyUp = (keyCode) => {
+    if (UP_KEYCODE === keyCode || DOWN_KEYCODE === keyCode) {
+        submarine.direction = 0;
+    }
 };
 
 const render = (delta, app) => {
+    updateBoxes(delta, app);
+    updateSubmarine(delta, app);
+    if (Math.random() > 0.96) {
+        createBox(app.stage, app.screen.width - 25, Math.random() * (app.screen.height - 25));
+    }
+};
+
+const updateSubmarine = (delta, app) => {
+    //console.log(submarine.vSpeed, submarine.direction);
+    submarine.vSpeed = submarine.vSpeed + vAcl  + (vAcl * 10 * submarine.direction);
+    submarine.y += submarine.vSpeed;
+    submarine.rotation = Math.atan2(submarine.vSpeed * 0.25 , hSpeed);
+    if (submarine.y > app.screen.height - submarine.sprite.height || submarine.y < submarine.sprite.height) {
+        submarine.y = app.screen.height / 2;
+        submarine.vSpeed = 0;
+    }
+};
+
+const updateBoxes = (delta, app) => {
     let removed = false;
     boxes.forEach((box) => {
         box.x += -hSpeed - delta;
@@ -43618,11 +43678,6 @@ const render = (delta, app) => {
     });
 
     boxes = removed ? boxes.filter(box => !box.removeed) : boxes;
-
-    if (Math.random() > 0.96) {
-        createBox(app.stage, app.screen.width - 25, Math.random() * (app.screen.height - 25));
-        console.log(boxes.length);
-    }
 };
 
 
@@ -43660,15 +43715,31 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const init = () => {
+    if (window.app) {
+        document.body.removeChild(app.view);
+        window.app.destroy();
+
+    }
     window.app = Object(_game_index_js__WEBPACK_IMPORTED_MODULE_0__["run"])();
 };
 
 init();
 
+window.onresize = () => {
+    init();
+};
+
+if (screen) {
+    try {
+        screen.orientation.lock('landscape');
+    } catch (err) {
+        console.error(err);
+    }
+}
+
 if (true) {
     module.hot.accept([/*! ./game/index.js */ "./src/game/index.js"], function(__WEBPACK_OUTDATED_DEPENDENCIES__) { /* harmony import */ _game_index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./game/index.js */ "./src/game/index.js");
 (() => {
-        document.body.removeChild(app.view);
         init();
     })(__WEBPACK_OUTDATED_DEPENDENCIES__); });
 }
