@@ -62,7 +62,7 @@
 /******/ 	}
 /******/
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "81234668df64b1d33a6d"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "86b6dc48f7da49585ba9"; // eslint-disable-line no-unused-vars
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
@@ -43702,7 +43702,7 @@ const motion = (event) => {
         return;
     }
 
-    switch (window.screen.orientation) {
+    switch (window.screen.orientation.type) {
         case ORIENTATION_LANDSCAPE_PRIMARY:
             if (event.accelerationIncludingGravity.y < -1) {
                 submarine.direction = -1;
@@ -43725,21 +43725,21 @@ const motion = (event) => {
             break;
         case ORIENTATION_PORTRAIT_PRIMARY:
             if (event.accelerationIncludingGravity.x < -1) {
-                submarine.direction = -1;
+                submarine.direction = 1;
                 return;
             }
             if (event.accelerationIncludingGravity.x > 1) {
-                submarine.direction = 1;
+                submarine.direction = -1;
                 return;
             }
             break;
         case ORIENTATION_PORTRAIT_SECONDARY:
             if (event.accelerationIncludingGravity.x < -1) {
-                submarine.direction = 1;
+                submarine.direction = -1;
                 return;
             }
             if (event.accelerationIncludingGravity.x > 1) {
-                submarine.direction = -1;
+                submarine.direction = 1;
                 return;
             }
             break;
@@ -43796,9 +43796,9 @@ const createInfo = (app) => {
 const showInfo = (app) => {
     info.text = `width: ${app.screen.width}, height: ${app.screen.height}, boxCount: ${boxes.length}` +
         (accelerometerEvent ? `\n accelerometerEvent: x: ${accelerometerEvent.accelerationIncludingGravity.x}` +
-            `y: ${accelerometerEvent.accelerationIncludingGravity.y}` : ``) +
+            ` y: ${accelerometerEvent.accelerationIncludingGravity.y}` : ``) +
         (accelerometerEvent ? `\n accelerometerEvent acel: x: ${accelerometerEvent.acceleration.x}` +
-            `y: ${accelerometerEvent.acceleration.y}` : ``) +
+            ` y: ${accelerometerEvent.acceleration.y}` : ``) +
         (window.screen.orientation ? `\n orientation: ${window.screen.orientation.type}` : ``);
 };
 
