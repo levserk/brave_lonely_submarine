@@ -179,7 +179,7 @@ const motion = (event) => {
         return;
     }
 
-    switch (window.screen.orientation) {
+    switch (window.screen.orientation.type) {
         case ORIENTATION_LANDSCAPE_PRIMARY:
             if (event.accelerationIncludingGravity.y < -1) {
                 submarine.direction = -1;
@@ -202,21 +202,21 @@ const motion = (event) => {
             break;
         case ORIENTATION_PORTRAIT_PRIMARY:
             if (event.accelerationIncludingGravity.x < -1) {
-                submarine.direction = -1;
+                submarine.direction = 1;
                 return;
             }
             if (event.accelerationIncludingGravity.x > 1) {
-                submarine.direction = 1;
+                submarine.direction = -1;
                 return;
             }
             break;
         case ORIENTATION_PORTRAIT_SECONDARY:
             if (event.accelerationIncludingGravity.x < -1) {
-                submarine.direction = 1;
+                submarine.direction = -1;
                 return;
             }
             if (event.accelerationIncludingGravity.x > 1) {
-                submarine.direction = -1;
+                submarine.direction = 1;
                 return;
             }
             break;
