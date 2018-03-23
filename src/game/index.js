@@ -12,11 +12,28 @@ export const run = () => {
     let app = createApp();
     document.body.appendChild(app.view);
     console.log(`game is run`);
-    PIXI.loader.add('submarine', textures.submarine)
-        .load(() => {
+    if (PIXI.loader.resources.submarine) {
         startGame(app)
-    });
+    } else {
+        PIXI.loader.add('submarine', textures.submarine)
+            .load(() => {
+                startGame(app)
+            });
+    }
+
+    //monkey path app destroy
+    let appdestroy = app.destroy;
+    app.destroy = function () {
+        destroy();
+        appdestroy.bind(app)();
+    }.bind(app);
+
     return app;
+};
+
+const destroy = () => {
+    submarine = null;
+    boxes = [];
 };
 
 const createApp = () => {
@@ -118,9 +135,9 @@ const render = (delta, app) => {
 
 const updateSubmarine = (delta, app) => {
     //console.log(submarine.vSpeed, submarine.direction);
-    submarine.vSpeed = submarine.vSpeed + vAcl  + (vAcl * 2 * submarine.direction);
+    submarine.vSpeed = submarine.vSpeed + vAcl  + (vAcl * 10 * submarine.direction);
     submarine.y += submarine.vSpeed;
-    submarine.rotation = Math.atan2(submarine.vSpeed, hSpeed);
+    submarine.rotation = Math.atan2(submarine.vSpeed * 0.25 , hSpeed);
     if (submarine.y > app.screen.height - submarine.sprite.height || submarine.y < submarine.sprite.height) {
         submarine.y = app.screen.height / 2;
         submarine.vSpeed = 0;
