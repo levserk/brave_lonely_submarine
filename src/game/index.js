@@ -273,9 +273,9 @@ const createInfo = (app) => {
 const showInfo = (app) => {
     info.text = `width: ${app.screen.width}, height: ${app.screen.height}, boxCount: ${boxes.length}` +
         (accelerometerEvent ? `\n accelerometerEvent: x: ${accelerometerEvent.accelerationIncludingGravity.x}` +
-            `y: ${accelerometerEvent.accelerationIncludingGravity.y}` : ``) +
+            ` y: ${accelerometerEvent.accelerationIncludingGravity.y}` : ``) +
         (accelerometerEvent ? `\n accelerometerEvent acel: x: ${accelerometerEvent.acceleration.x}` +
-            `y: ${accelerometerEvent.acceleration.y}` : ``) +
+            ` y: ${accelerometerEvent.acceleration.y}` : ``) +
         (window.screen.orientation ? `\n orientation: ${window.screen.orientation.type}` : ``);
 };
 
