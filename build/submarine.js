@@ -62,7 +62,7 @@
 /******/ 	}
 /******/
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "f57c998aab4ef300822e"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "07915a5793fc997c6a04"; // eslint-disable-line no-unused-vars
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
@@ -43529,7 +43529,10 @@ let boxes = [],
     hSpeed = 1,
     vAcl = 0.02,
     vMaxSpeed = 3,
-    submarine;
+    info,
+    submarine,
+    accelerometerEvent,
+    magnetometerEvent;
 
 const run = () => {
     let app = createApp();
@@ -43626,9 +43629,12 @@ const checkObjectIsOutBorders = (obj, app) => {
 
 const startGame = (app) => {
     createSubmarine(app);
+    createInfo(app);
     app.ticker.add((delta) => render(delta, app));
+
     window.onkeydown = (e) => onKeyDown(e.keyCode);
     window.onkeyup = (e) => onKeyUp(e.keyCode);
+
     document.body.addEventListener('touchstart', (e) => {
         if (e.touches && e.touches.length) {
             for (let touch of e.touches){
@@ -43636,12 +43642,24 @@ const startGame = (app) => {
                 touchStart(touch)
             }
         }
-    });
-
+    }, false);
     document.body.addEventListener('touchend', (e) => {
         console.log('touchend', e);
         touchEnd()
-    });
+    }, false);
+
+    if(window.DeviceMotionEvent){
+        window.addEventListener("devicemotion", motion, false);
+    }else{
+        console.log("DeviceMotionEvent is not supported");
+    }
+
+    if(window.DeviceOrientationEvent){
+        window.addEventListener("deviceorientation", orientation, false);
+    }else{
+        console.log("DeviceOrientationEvent is not supported");
+    }
+
 };
 
 const UP_KEYCODE = 38;
@@ -43674,9 +43692,21 @@ const touchEnd = (touch) => {
     submarine.direction = 0;
 };
 
+const motion = (event) => {
+    console.log("Accelerometer: ", event);
+    accelerometerEvent = event
+};
+
+const orientation = (event) =>{
+    console.log("Magnetometer: ", event);
+    magnetometerEvent = event;
+};
+
+
 const render = (delta, app) => {
     updateBoxes(delta, app);
     updateSubmarine(delta, app);
+    showInfo(app);
     if (Math.random() > 0.96) {
         createBox(app.stage, app.screen.width - 25, Math.random() * (app.screen.height - 25));
     }
@@ -43704,6 +43734,29 @@ const updateBoxes = (delta, app) => {
     });
 
     boxes = removed ? boxes.filter(box => !box.removeed) : boxes;
+};
+
+const createInfo = (app) => {
+    let style = new pixi_js__WEBPACK_IMPORTED_MODULE_0__["TextStyle"]({
+        fontSize: 12,
+        fill: 'white'
+    });
+    info = new pixi_js__WEBPACK_IMPORTED_MODULE_0__["Text"](``, style);
+    info.x = 10;
+    info.y = 10;
+    app.stage.addChild(info);
+
+};
+
+const showInfo = (app) => {
+    info.text = `width: ${app.screen.width}, height: ${app.screen.height}, boxCount: ${boxes.length}` +
+        (accelerometerEvent ? `\n accelerometerEvent: x: ${accelerometerEvent.accelerationIncludingGravity.x}` +
+            `y: ${accelerometerEvent.accelerationIncludingGravity.y}` +
+            `z: ${accelerometerEvent.accelerationIncludingGravity.z}` : ``) +
+        (magnetometerEvent ? `\n magnetometerEvent: x: ${magnetometerEvent.alpha}` +
+            `y: ${magnetometerEvent.beta}` +
+            `z: ${magnetometerEvent.gamma}`: ``) +
+        (window.screen.orientation ? `\n orientation: ${window.screen.orientation.type}` : ``)
 };
 
 

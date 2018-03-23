@@ -2,6 +2,6 @@
   "short_name": "bls",
   "name": "brave lonely submarine",
   "start_url": "/index.html",
-  "display": "fullscreen",
-  "orientation": "landscape"
+  "display": "standalone",
+  "orientation": "landscape-primary"
 }
