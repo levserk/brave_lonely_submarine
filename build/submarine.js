@@ -62,7 +62,7 @@
 /******/ 	}
 /******/
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "a44582edbef16b353338"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "7d8ce151de0a056946b0"; // eslint-disable-line no-unused-vars
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
@@ -44497,7 +44497,7 @@ const init = () => {
 };
 
 window.onresize = () => {
-    init();
+    //init();
 };
 
 
@@ -44513,18 +44513,30 @@ var button = document.createElement(`div`);
 button.innerHTML = "Start";
 document.body.appendChild(button);
 button.onclick = () => {
+    document.addEventListener("webkitfullscreenchange", fullScreenChanged);
+    document.addEventListener("mozfullscreenchange", fullScreenChanged);
+    document.addEventListener("fullscreenchange", fullScreenChanged);
+    fullScreen(document.documentElement);
+    document.body.removeChild(button);
+};
+
+const fullScreenChanged = () => {
     if (screen) {
         try {
-            screen.orientation.lock('landscape');
+            screen.orientation.lock('landscape').then(() => {
+                init();
+            }).catch((err) => {
+                console.error(err);
+                init();
+            });
         } catch (err) {
             console.error(err);
+            init();
         }
+    } else {
+        init();
     }
-    fullScreen(document.documentElement);
-
-    document.body.removeChild(button);
-    //init();
-}
+};
 
 function fullScreen(element) {
     if(element.requestFullscreen) {
