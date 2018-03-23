@@ -62,7 +62,7 @@
 /******/ 	}
 /******/
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "0a12492e557c7a5347c4"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "f57c998aab4ef300822e"; // eslint-disable-line no-unused-vars
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
@@ -43629,6 +43629,19 @@ const startGame = (app) => {
     app.ticker.add((delta) => render(delta, app));
     window.onkeydown = (e) => onKeyDown(e.keyCode);
     window.onkeyup = (e) => onKeyUp(e.keyCode);
+    document.body.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches.length) {
+            for (let touch of e.touches){
+                console.log('touchstart', touch.identifier, touch.pageX, touch.pageY, touch);
+                touchStart(touch)
+            }
+        }
+    });
+
+    document.body.addEventListener('touchend', (e) => {
+        console.log('touchend', e);
+        touchEnd()
+    });
 };
 
 const UP_KEYCODE = 38;
@@ -43646,6 +43659,19 @@ const onKeyUp = (keyCode) => {
     if (UP_KEYCODE === keyCode || DOWN_KEYCODE === keyCode) {
         submarine.direction = 0;
     }
+};
+
+const touchStart = (touch) => {
+    console.log('touchStart', touch.pageX > app.screen.width / 2);
+    if (touch.pageX > app.screen.width / 2 ) {
+        submarine.direction = -1;
+    } else {
+        submarine.direction = 1
+    }
+};
+
+const touchEnd = (touch) => {
+    submarine.direction = 0;
 };
 
 const render = (delta, app) => {
