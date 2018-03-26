@@ -1,15 +1,18 @@
 'use strict';
 const path = require('path');
 const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CleanWebpackPlugin = require('clean-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     entry: {
         submarine: './src/index.js'
     },
     output: {
-        path: path.resolve('./build'),
-        publicPath: './build/',
-        filename: '[name].js'
+        path: path.resolve('./dist'),
+        publicPath: '/',
+        filename: 'build/[name].[hash].js'
     },
     module:{
         rules: [{
@@ -49,12 +52,21 @@ module.exports = {
     },
     devServer: {
         hot: true,
-        contentBase: path.resolve('./'),
-        publicPath: '/build/',
+        contentBase: path.resolve('./dist'),
         port: 8001
     },
     plugins: [
+        new CleanWebpackPlugin(['dist']),
         new webpack.HotModuleReplacementPlugin(),
-        new webpack.NamedModulesPlugin()
+        new webpack.NamedModulesPlugin(),
+        new HtmlWebpackPlugin({
+            template: 'src/index.html'
+        }),
+        new CopyWebpackPlugin([
+            {
+                from: 'manifest.json',
+                to: 'manifest.json'
+            }
+        ])
     ]
 };

@@ -271,11 +271,13 @@ const createInfo = (app) => {
 };
 
 const showInfo = (app) => {
+    let accelerometerX = (accelerometerEvent ? accelerometerEvent.accelerationIncludingGravity.x : 0) || 0,
+        accelerometerY= (accelerometerEvent ? accelerometerEvent.accelerationIncludingGravity.y : 0) || 0;
+
     info.text = `width: ${app.screen.width}, height: ${app.screen.height}, boxCount: ${boxes.length}` +
-        (accelerometerEvent ? `\n accelerometerEvent: x: ${accelerometerEvent.accelerationIncludingGravity.x}` +
-            ` y: ${accelerometerEvent.accelerationIncludingGravity.y}` : ``) +
-        (accelerometerEvent ? `\n accelerometerEvent acel: x: ${accelerometerEvent.acceleration.x}` +
-            ` y: ${accelerometerEvent.acceleration.y}` : ``) +
+        `\n vspeed: ${submarine.vSpeed.toFixed(2)}, vAcl: ${vAcl}` +
+        (accelerometerEvent ? `\n accelerometerEvent: x: ${accelerometerX.toFixed(3)}` +
+            ` y: ${accelerometerY.toFixed(3)}` : ``) +
         (window.screen.orientation ? `\n orientation: ${window.screen.orientation.type}` : ``);
 };
 
