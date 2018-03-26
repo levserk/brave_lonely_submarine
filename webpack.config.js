@@ -11,7 +11,6 @@ module.exports = {
     },
     output: {
         path: path.resolve('./dist'),
-        publicPath: '/',
         filename: 'build/[name].[hash].js'
     },
     module:{
@@ -56,7 +55,12 @@ module.exports = {
         port: 8001
     },
     plugins: [
-        new CleanWebpackPlugin(['dist']),
+        new CleanWebpackPlugin([path.resolve('./dist')],
+            {
+                root: __dirname,
+                verbose: true,
+                dry: false
+            }),
         new webpack.HotModuleReplacementPlugin(),
         new webpack.NamedModulesPlugin(),
         new HtmlWebpackPlugin({
