@@ -55,12 +55,7 @@ module.exports = {
         port: 8001
     },
     plugins: [
-        new CleanWebpackPlugin([path.resolve('./dist')],
-            {
-                root: __dirname,
-                verbose: true,
-                dry: false
-            }),
+        new CleanWebpackPlugin([path.resolve('dist')]),
         new webpack.HotModuleReplacementPlugin(),
         new webpack.NamedModulesPlugin(),
         new HtmlWebpackPlugin({
