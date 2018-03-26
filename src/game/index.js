@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js'
+import * as Intersects from 'yy-intersects'
 import textures from './textures'
 
 let boxes = [],
@@ -61,6 +62,7 @@ const Box = (width, height, color) => {
     graphics.lineStyle(1, color, 1);
     graphics.drawRect(0, 0, width, height);
     graphics.endFill();
+    graphics.shape = new Intersects.Rectangle(width, height);
     return graphics;
 };
 
@@ -83,6 +85,7 @@ const createSubmarine = (app) => {
     submarine.vSpeed = 0;
     submarine.direction = 0;
     submarine.cacheAsBitmap = true;
+    submarine.shape = new Intersects.Rectangle(submarine.sprite)
     app.stage.addChild(submarine);
     submarine.x = app.screen.width / 2;
     submarine.y = app.screen.height / 2;
@@ -175,12 +178,13 @@ const motion = (event) => {
     console.log("Accelerometer: ", event);
     accelerometerEvent = event;
 
-    if (touchStartFlag) {
+    if (touchStartFlag || !event.accelerationIncludingGravity.y || !event.accelerationIncludingGravity.x) {
         return;
     }
 
     switch (window.screen.orientation.type) {
         case ORIENTATION_LANDSCAPE_PRIMARY:
+            vAcl = Math.abs(event.accelerationIncludingGravity.y / 200);
             if (event.accelerationIncludingGravity.y < -1) {
                 submarine.direction = -1;
                 return;
@@ -191,6 +195,7 @@ const motion = (event) => {
             }
             break;
         case ORIENTATION_LANDSCAPE_SECONDARY:
+            vAcl = Math.abs(event.accelerationIncludingGravity.y / 200);
             if (event.accelerationIncludingGravity.y < -1) {
                 submarine.direction = 1;
                 return;
@@ -201,6 +206,7 @@ const motion = (event) => {
             }
             break;
         case ORIENTATION_PORTRAIT_PRIMARY:
+            vAcl = Math.abs(event.accelerationIncludingGravity.x / 200);
             if (event.accelerationIncludingGravity.x < -1) {
                 submarine.direction = 1;
                 return;
@@ -211,6 +217,7 @@ const motion = (event) => {
             }
             break;
         case ORIENTATION_PORTRAIT_SECONDARY:
+            vAcl = Math.abs(event.accelerationIncludingGravity.x / 200);
             if (event.accelerationIncludingGravity.x < -1) {
                 submarine.direction = -1;
                 return;
@@ -240,18 +247,23 @@ const updateSubmarine = (delta, app) => {
     submarine.y += submarine.vSpeed;
     submarine.rotation = Math.atan2(submarine.vSpeed * 0.25 , hSpeed);
     if (submarine.y > app.screen.height - submarine.sprite.height || submarine.y < submarine.sprite.height) {
-        submarine.y = app.screen.height / 2;
-        submarine.vSpeed = 0;
+        submarine.vSpeed = -submarine.vSpeed ;
     }
+    submarine.shape.update();
 };
 
 const updateBoxes = (delta, app) => {
     let removed = false;
     boxes.forEach((box) => {
         box.x += -hSpeed - delta;
+        box.shape.update();
         if (checkObjectIsOutBorders(box, app)) {
             removed = true;
             removeObj(app, box);
+        } else {
+            if (box.shape.collidesRectangle(submarine.shape)){
+                console.log(`collides!`, box.x, box.y);
+            }
         }
     });
 

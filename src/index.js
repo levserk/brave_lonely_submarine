@@ -7,7 +7,10 @@ const init = () => {
         window.app.destroy();
 
     }
-    window.app = run();
+    console.log(`init`, `width: ${document.documentElement.clientWidth} height: ${document.documentElement.clientHeight}`);
+
+    // durty hack, waiting update window after fullscreen mode change
+    setTimeout(() => window.app = run(), 100);
 };
 
 window.onresize = () => {

@@ -20,7 +20,8 @@
     "pixi.js": "^4.7.1",
     "style-loader": "^0.20.3",
     "webpack": "^4.2.0",
-    "webpack-cli": "^2.0.12"
+    "webpack-cli": "^2.0.12",
+    "yy-intersects": "^1.0.7"
   },
   "devDependencies": {
     "webpack-dev-server": "^3.1.1"
