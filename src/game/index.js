@@ -1,14 +1,18 @@
 import * as PIXI from 'pixi.js'
 import * as Intersects from 'yy-intersects'
 import textures from './textures'
+import Particles from './particles/particles.js'
 
-let boxes = [],
+let width,
+    height,
+    boxes = [],
     spites = [],
     hSpeed = 1,
     vAcl = 0.02,
     vMaxSpeed = 3,
     info,
     submarine,
+    particles,
     touchStartFlag = false,
     accelerometerEvent,
     magnetometerEvent;
@@ -42,8 +46,8 @@ const destroy = () => {
 };
 
 const createApp = () => {
-    let width = document.documentElement.clientWidth,
-        height = document.documentElement.clientHeight;
+    width = document.documentElement.clientWidth;
+    height = document.documentElement.clientHeight;
     return new PIXI.Application(width, height, {
         backgroundColor: 0x334d5c,
         //antialiasing: true,
@@ -57,13 +61,15 @@ const createApp = () => {
 const BOX_COLOR = 0xd5d5d5;
 
 const Box = (width, height, color) => {
-    let graphics = new PIXI.Graphics();
+    let container = new PIXI.Container(),
+        graphics = new PIXI.Graphics();
     graphics.beginFill(color);
     graphics.lineStyle(1, color, 1);
     graphics.drawRect(0, 0, width, height);
     graphics.endFill();
-    graphics.shape = new Intersects.Rectangle(width, height);
-    return graphics;
+    container.addChild(graphics);
+    container.shape = new Intersects.Rectangle(container, {rotation: graphics});
+    return container;
 };
 
 const createBox = (container, x, y) => {
@@ -85,10 +91,24 @@ const createSubmarine = (app) => {
     submarine.vSpeed = 0;
     submarine.direction = 0;
     submarine.cacheAsBitmap = true;
-    submarine.shape = new Intersects.Rectangle(submarine.sprite)
     app.stage.addChild(submarine);
-    submarine.x = app.screen.width / 2;
+    submarine.x = app.screen.width / 2 - 500;
     submarine.y = app.screen.height / 2;
+    submarine.shape = new Intersects.Rectangle(submarine, {rotation: submarine.sprite});
+};
+
+const createParticles = (app) => {
+    particles = new Particles(app.screen.width, app.screen.height);
+    app.stage.addChild(particles);
+    particles.x = 0;
+    particles.y = 0;
+};
+
+const createBubbleParticle = () => {
+    let angle = submarine.rotation,
+        x = submarine.x + 2 - Math.cos(angle) * submarine.width / 2,
+        y = submarine.y + 2 - Math.sin(angle) * submarine.height / 2;
+    particles.createParticle(x, y, 0xffffff, -Math.PI / 2, 1, 1);
 };
 
 const removeObj = (app, obj) => {
@@ -111,6 +131,7 @@ const checkObjectIsOutBorders = (obj, app) => {
 const startGame = (app) => {
     createSubmarine(app);
     createInfo(app);
+    createParticles(app);
     app.ticker.add((delta) => render(delta, app));
 
     window.onkeydown = (e) => onKeyDown(e.keyCode);
@@ -118,7 +139,7 @@ const startGame = (app) => {
 
     document.body.addEventListener('touchstart', (e) => {
         if (e.touches && e.touches.length) {
-            for (let touch of e.touches){
+            for (let touch of e.touches) {
                 console.log('touchstart', touch.identifier, touch.pageX, touch.pageY, touch);
                 touchStart(touch)
             }
@@ -129,9 +150,9 @@ const startGame = (app) => {
         touchEnd()
     }, false);
 
-    if(window.DeviceMotionEvent){
+    if (window.DeviceMotionEvent) {
         window.addEventListener("devicemotion", motion, false);
-    }else{
+    } else {
         console.log("DeviceMotionEvent is not supported");
     }
 
@@ -157,7 +178,7 @@ const onKeyUp = (keyCode) => {
 const touchStart = (touch) => {
     console.log('touchStart', touch.pageX > app.screen.width / 2);
     touchStartFlag = true;
-    if (touch.pageX > app.screen.width / 2 ) {
+    if (touch.pageX > app.screen.width / 2) {
         submarine.direction = -1;
     } else {
         submarine.direction = 1
@@ -239,21 +260,26 @@ const render = (delta, app) => {
     if (Math.random() > 0.96) {
         createBox(app.stage, app.screen.width - 25, Math.random() * (app.screen.height - 25));
     }
+    particles.render(delta, hSpeed);
 };
 
 const updateSubmarine = (delta, app) => {
     //console.log(submarine.vSpeed, submarine.direction);
-    submarine.vSpeed = submarine.vSpeed + vAcl  + (vAcl * 10 * submarine.direction);
+    submarine.vSpeed = submarine.vSpeed + vAcl + (vAcl * 10 * submarine.direction);
     submarine.y += submarine.vSpeed;
-    submarine.rotation = Math.atan2(submarine.vSpeed * 0.25 , hSpeed);
+    submarine.rotation = Math.atan2(submarine.vSpeed * 0.25, hSpeed);
     if (submarine.y > app.screen.height - submarine.sprite.height || submarine.y < submarine.sprite.height) {
-        submarine.vSpeed = -submarine.vSpeed ;
+        submarine.vSpeed = -submarine.vSpeed;
     }
     submarine.shape.update();
+    if (Math.random() > 0.8) {
+        createBubbleParticle();
+    }
 };
 
 const updateBoxes = (delta, app) => {
     let removed = false;
+
     boxes.forEach((box) => {
         box.x += -hSpeed - delta;
         box.shape.update();
@@ -261,8 +287,9 @@ const updateBoxes = (delta, app) => {
             removed = true;
             removeObj(app, box);
         } else {
-            if (box.shape.collidesRectangle(submarine.shape)){
-                console.log(`collides!`, box.x, box.y);
+            if (box.shape.collidesRectangle(submarine.shape)) {
+                removed = true;
+                removeObj(app, box);
             }
         }
     });
@@ -284,7 +311,7 @@ const createInfo = (app) => {
 
 const showInfo = (app) => {
     let accelerometerX = (accelerometerEvent ? accelerometerEvent.accelerationIncludingGravity.x : 0) || 0,
-        accelerometerY= (accelerometerEvent ? accelerometerEvent.accelerationIncludingGravity.y : 0) || 0;
+        accelerometerY = (accelerometerEvent ? accelerometerEvent.accelerationIncludingGravity.y : 0) || 0;
 
     info.text = `width: ${app.screen.width}, height: ${app.screen.height}, boxCount: ${boxes.length}` +
         `\n vspeed: ${submarine.vSpeed.toFixed(2)}, vAcl: ${vAcl}` +
